@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The white dot inside the swipe thumb. Figma: rgba(255,255,255,0.7). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#B3FFFFFF" />
+</shape>

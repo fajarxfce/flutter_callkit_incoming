@@ -23,6 +23,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
@@ -242,14 +243,14 @@ class CallkitIncomingActivity : Activity() {
             if (TextUtils.isEmpty(textDecline)) getString(R.string.text_decline) else textDecline
 
         val acceptCallColor =
-            data?.getString(CallkitConstants.EXTRA_CALLKIT_ACCEPT_COLOR, "#4CAF50")
+            data?.getString(CallkitConstants.EXTRA_CALLKIT_ACCEPT_COLOR, "#0AA85B")
         try {
             ivAcceptCall.setBackground(AppUtils.createCircleDrawable(Color.parseColor(acceptCallColor)))
         } catch (error: Exception) {
         }
 
         val declineCallColor =
-            data?.getString(CallkitConstants.EXTRA_CALLKIT_DECLINE_COLOR, "#F44336")
+            data?.getString(CallkitConstants.EXTRA_CALLKIT_DECLINE_COLOR, "#E12024")
         try {
             ivDeclineCall.setBackground(AppUtils.createCircleDrawable(Color.parseColor(declineCallColor)))
         } catch (error: Exception) {
@@ -262,7 +263,7 @@ class CallkitIncomingActivity : Activity() {
         }
 
         val backgroundColor =
-            data?.getString(CallkitConstants.EXTRA_CALLKIT_BACKGROUND_COLOR, "#0955fa")
+            data?.getString(CallkitConstants.EXTRA_CALLKIT_BACKGROUND_COLOR, "#0AA85B")
         try {
             ivBackground.setBackgroundColor(Color.parseColor(backgroundColor))
         } catch (error: Exception) {
@@ -300,8 +301,9 @@ class CallkitIncomingActivity : Activity() {
     private fun initView() {
         ivBackground = findViewById(R.id.ivBackground)
         llBackgroundAnimation = findViewById(R.id.llBackgroundAnimation)
-        llBackgroundAnimation.layoutParams.height =
-            Utils.getScreenWidth() + Utils.getStatusBarHeight(this@CallkitIncomingActivity)
+        // Duluin: the custom layout sizes this region itself (the design has no
+        // pulsing ripple), so the plugin's forced square height is dropped and the
+        // ripple is left transparent in the layout.
         llBackgroundAnimation.startRippleAnimation()
 
         tvNameCaller = findViewById(R.id.tvNameCaller)
@@ -310,10 +312,9 @@ class CallkitIncomingActivity : Activity() {
         ivAvatar = findViewById(R.id.ivAvatar)
 
         llAction = findViewById(R.id.llAction)
-
-        val params = llAction.layoutParams as MarginLayoutParams
-        params.setMargins(0, 0, 0, Utils.getNavigationBarHeight(this@CallkitIncomingActivity))
-        llAction.layoutParams = params
+        // Duluin: the custom layout handles its own bottom spacing (the pill sits
+        // in a column with the swipe hint), so the plugin's nav-bar bottom margin
+        // is dropped — it used to shove the hint into the gesture area.
 
         ivAcceptCall = findViewById(R.id.ivAcceptCall)
         tvAccept = findViewById(R.id.tvAccept)
@@ -327,6 +328,64 @@ class CallkitIncomingActivity : Activity() {
         ivDeclineCall.setOnClickListener {
             onDeclineClick()
         }
+
+        setupSwipeToAnswer()
+    }
+
+    // Duluin: drag the centre thumb right to answer, left to decline — the
+    // "geser untuk mengangkat" gesture from the Figma design. Tapping the FABs
+    // still works (their click listeners above); this only adds the swipe.
+    @Suppress("ClickableViewAccessibility")
+    private fun setupSwipeToAnswer() {
+        val thumb = findViewById<View>(R.id.vSwipeThumb) ?: return
+        var downX = 0f
+        var maxTravel = 1f
+        var fired = false
+        thumb.setOnTouchListener { _, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    downX = event.rawX
+                    maxTravel = ((llAction.width / 2f) - thumb.width).coerceAtLeast(1f)
+                    fired = false
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = (event.rawX - downX).coerceIn(-maxTravel, maxTravel)
+                    thumb.translationX = dx
+                    val progress = dx / maxTravel
+                    ivAcceptCall.scaleX = 1f + progress.coerceAtLeast(0f) * 0.18f
+                    ivAcceptCall.scaleY = ivAcceptCall.scaleX
+                    ivDeclineCall.scaleX = 1f + (-progress).coerceAtLeast(0f) * 0.18f
+                    ivDeclineCall.scaleY = ivDeclineCall.scaleX
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    val dx = thumb.translationX
+                    val threshold = maxTravel * 0.6f
+                    resetButtonScale()
+                    when {
+                        !fired && dx >= threshold -> {
+                            fired = true
+                            onAcceptClick()
+                        }
+                        !fired && dx <= -threshold -> {
+                            fired = true
+                            onDeclineClick()
+                        }
+                        else -> thumb.animate().translationX(0f).setDuration(160L).start()
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+
+    private fun resetButtonScale() {
+        ivAcceptCall.scaleX = 1f
+        ivAcceptCall.scaleY = 1f
+        ivDeclineCall.scaleX = 1f
+        ivDeclineCall.scaleY = 1f
     }
 
     private fun animateAcceptCall() {

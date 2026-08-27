@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <color name="accept">#4CAF50</color>
-    <color name="accept_ripple">#A6FFA9</color>
-    <color name="decline">#F44336</color>
-    <color name="decline_ripple">#FB8D85</color>
+    <!-- Duluin Chat incoming-call palette (Figma "detail riwayat panggilan",
+         node 118:1391). Answer = brand green, decline = brand red. -->
+    <color name="accept">#0AA85B</color>
+    <color name="accept_ripple">#7BE3AC</color>
+    <color name="decline">#E12024</color>
+    <color name="decline_ripple">#F49A9A</color>
 
     <color name="action_text">#FFFFFF</color>
-    <color name="ripple_main_color">#80ffffff</color>
+    <color name="ripple_main_color">#00FFFFFF</color>
 </resources>

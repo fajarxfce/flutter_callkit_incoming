@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The decorative swipe thumb's glass ring. Figma: rgba(226,232,240,0.5). -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#80E2E8F0" />
+</shape>

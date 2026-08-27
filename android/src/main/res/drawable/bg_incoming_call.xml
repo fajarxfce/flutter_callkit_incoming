@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The incoming call backdrop from the Duluin Chat design: a vertical brand-green
+     gradient (#0AA85B -> #044C29) with the faint circle/streak pattern washed over
+     it. Set as ivBackground's src (scaleType fitXY). -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="270"
+                android:startColor="#0AA85B"
+                android:endColor="#044C29"
+                android:type="linear" />
+        </shape>
+    </item>
+    <item>
+        <bitmap
+            android:src="@drawable/incoming_pattern"
+            android:gravity="fill" />
+    </item>
+</layer-list>

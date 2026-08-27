@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The glass pill that holds the decline / swipe-thumb / accept row.
+     Figma: fill rgba(241,245,249,0.2), corner radius 48dp. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#33F1F5F9" />
+    <corners android:radius="48dp" />
+</shape>
