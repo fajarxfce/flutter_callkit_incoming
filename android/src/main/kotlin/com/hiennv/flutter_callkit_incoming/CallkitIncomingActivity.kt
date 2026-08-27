@@ -8,7 +8,6 @@
 package com.hiennv.flutter_callkit_incoming
 
 import android.app.Activity
-import android.app.KeyguardManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -411,15 +410,11 @@ class CallkitIncomingActivity : Activity() {
             TransparentActivity.getIntent(this, CallkitConstants.ACTION_CALL_ACCEPT, data)
         startActivity(acceptIntent)
 
-        dismissKeyguard()
+        // Duluin: do NOT dismiss the keyguard on accept. The app's MainActivity is
+        // shown over the lock screen (setShowWhenLocked), so the answered call
+        // continues on the keyguard — WhatsApp-style — instead of forcing the
+        // unlock bouncer first. requestDismissKeyguard() is what used to raise it.
         finish()
-    }
-
-    private fun dismissKeyguard() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-            keyguardManager.requestDismissKeyguard(this, null)
-        }
     }
 
     private fun onDeclineClick() {
