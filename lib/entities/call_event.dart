@@ -31,6 +31,8 @@ abstract class CallEventConstants {
       'com.hiennv.flutter_callkit_incoming.ACTION_CALL_TOGGLE_GROUP';
   static const String actionCallToggleAudioSession =
       'com.hiennv.flutter_callkit_incoming.ACTION_CALL_TOGGLE_AUDIO_SESSION';
+  static const String actionCallAudioStateChange =
+      'com.hiennv.flutter_callkit_incoming.ACTION_CALL_AUDIO_STATE_CHANGE';
   static const String actionCallCustom =
       'com.hiennv.flutter_callkit_incoming.ACTION_CALL_CUSTOM';
 }
@@ -42,12 +44,21 @@ sealed class CallEvent {
   String get eventName;
 }
 
+class CallEventActionCallAudioStateChange extends CallEvent {
+  const CallEventActionCallAudioStateChange(this.id, this.isSpeakerEnabled);
+
+  final String id;
+  final bool isSpeakerEnabled;
+
+  @override
+  String get eventName => CallEventConstants.actionCallAudioStateChange;
+}
+
 class CallEventActionDidUpdateDevicePushTokenVoip extends CallEvent {
   const CallEventActionDidUpdateDevicePushTokenVoip();
 
   @override
-  String get eventName =>
-      CallEventConstants.actionDidUpdateDevicePushTokenVoip;
+  String get eventName => CallEventConstants.actionDidUpdateDevicePushTokenVoip;
 
   @override
   String toString() => 'CallEventActionDidUpdateDevicePushTokenVoip()';

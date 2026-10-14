@@ -1,3 +1,13 @@
+## Unreleased (HRIS fork)
+
+* Implement Android `setAudioRoute` through the owning Telecom Connection:
+  `requestCallEndpointChange` on Android 14+, `setAudioRoute` on Android 8–13.
+* Return the confirmed speaker state, forward route changes with the call id,
+  and preserve connected headsets during automatic setup. Explicit Speaker
+  selection can override the headset preference.
+* Allow routing requested immediately after `startCall` while Telecom creates
+  its Connection, with a bounded timeout and cleanup when the call ends.
+
 ## 3.1.5
 * Fix Android: resolve build errors introduced in 3.1.4.
 * Fix Android: always call `startForeground` to prevent `ForegroundServiceDidNotStartInTimeException`, thank @AAkira https://github.com/hiennguyen92/flutter_callkit_incoming/pull/857

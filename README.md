@@ -46,6 +46,31 @@ Our top sponsors are shown below!
 - Custom UI Android/Callkit for iOS
 - Example using Pushkit/VoIP for iOS
 
+### Android call audio routing (HRIS fork)
+
+Self-managed calls registered with Telecom must change output through their
+`Connection`; a separate media SDK's AudioManager request can be overridden by
+Telecom. After `startCall` or accepting an incoming call, use its same native id:
+
+```dart
+final speakerEnabled = await FlutterCallkitIncoming.setAudioRoute(
+  callKitId,
+  isSpeakerEnabled: true,
+  force: true, // an explicit Speaker tap; omit for automatic video-call setup
+);
+```
+
+The returned boolean is the confirmed speaker state. Automatic setup preserves
+a connected Bluetooth/wired headset. Listen for
+`CallEventActionCallAudioStateChange` to reflect OS/headset changes; it includes
+`id` and `isSpeakerEnabled`. Keep a single shared subscription to `onEvent`.
+
+Android 14+ uses the available `CallEndpoint` and `requestCallEndpointChange`;
+Android 8–13 uses `Connection.setAudioRoute`. The request waits for the initial
+Telecom Connection when necessary and fails after five seconds without a
+confirmation or when the call ends. This method is Android-only; iOS output
+continues to be managed by the media SDK's AVAudioSession integration.
+
 > [!WARNING]
 > ### iOS: ONLY WORKING ON REAL DEVICE
 > **Please make sure setup/using [PUSHKIT](https://github.com/hiennguyen92/flutter_callkit_incoming/blob/master/PUSHKIT.md) FOR VOIP**
@@ -831,4 +856,4 @@ Please check [PUSHKIT.md](https://github.com/hiennguyen92/flutter_callkit_incomi
     </td>
     <td></td>
   </tr>
-</table> 
+</table>

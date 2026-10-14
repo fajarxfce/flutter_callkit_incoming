@@ -177,6 +177,27 @@ class FlutterCallkitIncoming {
     await _channel.invokeMethod("callConnected", {'id': id});
   }
 
+  /// Changes the audio output of an Android Telecom call.
+  ///
+  /// Returns whether the confirmed output is the loudspeaker. A headset keeps
+  /// priority unless [force] is true. Throws if Telecom cannot apply the route.
+  /// iOS audio continues to be managed through the application's media SDK.
+  static Future<bool> setAudioRoute(
+    String id, {
+    required bool isSpeakerEnabled,
+    bool force = false,
+  }) async {
+    final result = await _channel.invokeMethod<bool>('setAudioRoute', {
+      'id': id,
+      'isSpeakerEnabled': isSpeakerEnabled,
+      'force': force,
+    });
+    if (result == null) {
+      throw const FormatException('Telecom did not return an audio route');
+    }
+    return result;
+  }
+
   /// End all calls.
   static Future<void> endAllCalls() async {
     await _channel.invokeMethod("endAllCalls");
@@ -238,6 +259,17 @@ class FlutterCallkitIncoming {
 
     final eventName = data['event'];
     switch (eventName) {
+      case CallEventConstants.actionCallAudioStateChange:
+        final body = data['body'];
+        if (body is! Map ||
+            body['id'] is! String ||
+            body['isSpeakerEnabled'] is! bool) {
+          return null;
+        }
+        return CallEventActionCallAudioStateChange(
+          body['id'] as String,
+          body['isSpeakerEnabled'] as bool,
+        );
       case CallEventConstants.actionDidUpdateDevicePushTokenVoip:
         return const CallEventActionDidUpdateDevicePushTokenVoip();
       case CallEventConstants.actionCallIncoming:

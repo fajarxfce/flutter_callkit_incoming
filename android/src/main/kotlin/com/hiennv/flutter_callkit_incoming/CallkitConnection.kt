@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.telecom.Connection
+import android.telecom.CallAudioState
+import android.telecom.CallEndpoint
 import android.telecom.DisconnectCause
 import android.telecom.TelecomManager
 import android.util.Log
@@ -64,11 +66,14 @@ class CallkitConnection(
 
         /** For testing / cleanup — release all refs (Connection objects already destroyed by OS). */
         fun clearAll() {
+            activeConnections.values.forEach { it.audioRouter.dispose() }
             activeConnections.clear()
         }
 
         fun activeCount(): Int = activeConnections.size
     }
+
+    private val audioRouter = CallkitAudioRouter(callId, this)
 
     init {
         connectionProperties = PROPERTY_SELF_MANAGED
@@ -96,6 +101,21 @@ class CallkitConnection(
         super.onAnswer()
         Log.d(TAG, "onAnswer id=$callId")
         setActive()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    override fun onAvailableCallEndpointsChanged(availableEndpoints: List<CallEndpoint>) {
+        audioRouter.onAvailableEndpointsChanged(availableEndpoints)
+    }
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
+    override fun onCallEndpointChanged(callEndpoint: CallEndpoint) {
+        audioRouter.onEndpointChanged(callEndpoint)
+    }
+
+    @Suppress("DEPRECATION")
+    override fun onCallAudioStateChanged(state: CallAudioState) {
+        audioRouter.onAudioStateChanged(state)
     }
 
     override fun onReject() {
@@ -307,6 +327,7 @@ class CallkitConnection(
 
     private fun finishWithCause(cause: Int) {
         stopResumeWatcher()
+        audioRouter.dispose()
         try {
             setDisconnected(DisconnectCause(cause))
         } catch (e: Exception) {

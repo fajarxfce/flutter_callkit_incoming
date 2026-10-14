@@ -439,7 +439,17 @@ class FlutterCallkitIncomingPlugin : FlutterPlugin, MethodCallHandler, ActivityA
                 }
 
                 "setAudioRoute" -> {
-                    result.success(true)
+                    val id = call.argument<String>("id")
+                    val speaker = call.argument<Boolean>("isSpeakerEnabled")
+                    if (id.isNullOrBlank() || speaker == null) {
+                        result.error("INVALID_ARGUMENTS", "A call id and speaker setting are required", null)
+                    } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        result.error("UNSUPPORTED_PLATFORM", "Self-managed Telecom routing requires Android 8 or later", null)
+                    } else {
+                        CallkitAudioRouter.request(
+                            id, speaker, call.argument<Boolean>("force") ?: false, result,
+                        )
+                    }
                 }
             }
         } catch (error: Exception) {
