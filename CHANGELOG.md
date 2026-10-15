@@ -1,5 +1,12 @@
 ## Unreleased (HRIS fork)
 
+* Match the native incoming screen to Figma 118:1837, with caller avatar rings,
+  a phone thumb, horizontal chevrons and system-bar insets.
+* Require a centre-to-target drag and release to answer or decline. Short,
+  cancelled, vertical and multi-touch gestures reset without resolving the call.
+* Keep explicit Answer/Decline accessibility actions for TalkBack.
+* Share the controls, caller header and avatar between portrait and tablet
+  landscape layouts. Add native gesture regression tests.
 * Implement Android `setAudioRoute` through the owning Telecom Connection:
   `requestCallEndpointChange` on Android 14+, `setAudioRoute` on Android 8–13.
 * Return the confirmed speaker state, forward route changes with the call id,

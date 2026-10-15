@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:importantForAccessibility="noHideDescendants"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/callSwipeTrack"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@drawable/bg_incoming_pill">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layoutDirection="ltr"
+            android:orientation="horizontal"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp">
+
+            <FrameLayout
+                android:id="@+id/callSwipeDeclineTarget"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/bg_halo_decline">
+
+                <ImageView
+                    android:id="@+id/callSwipeDeclineIcon"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_button_decline"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_call_decline" />
+            </FrameLayout>
+
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="20dp"
+                android:layout_weight="1"
+                android:alpha="0.7"
+                android:scaleType="centerInside"
+                android:rotation="180"
+                android:src="@drawable/ic_swipe_chevrons" />
+
+            <Space
+                android:layout_width="48dp"
+                android:layout_height="1dp" />
+
+            <ImageView
+                android:layout_width="0dp"
+                android:layout_height="20dp"
+                android:layout_weight="1"
+                android:alpha="0.7"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_swipe_chevrons" />
+
+            <FrameLayout
+                android:id="@+id/callSwipeAcceptTarget"
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/bg_halo_accept">
+
+                <ImageView
+                    android:id="@+id/callSwipeAcceptIcon"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_button_accept"
+                    android:padding="12dp"
+                    android:src="@drawable/ic_call_accept" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/callSwipeThumb"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_call_swipe_thumb"
+            android:elevation="2dp"
+            android:padding="12dp"
+            android:src="@drawable/ic_call_accept"
+            android:tint="#0AA85B" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/callSwipeHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:fontFamily="@font/inter_regular"
+        android:gravity="center"
+        android:minLines="2"
+        android:text="@string/text_swipe_to_answer"
+        android:textColor="#B3FFFFFF"
+        android:textSize="12sp" />
+</LinearLayout>

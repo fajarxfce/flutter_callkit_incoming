@@ -15,27 +15,22 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.IntentFilter
 import android.content.pm.ActivityInfo
 import android.graphics.Color
-import android.graphics.drawable.Drawable
-import androidx.core.graphics.drawable.DrawableCompat
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
-import android.view.MotionEvent
 import android.view.View
 import android.view.Window
 import android.view.WindowManager
-import android.view.animation.AnimationUtils
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
-import com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout
+import com.hiennv.flutter_callkit_incoming.widgets.CallSwipeView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import de.hdodenhof.circleimageview.CircleImageView
 import kotlin.math.abs
-import android.view.ViewGroup.MarginLayoutParams
 import android.os.PowerManager
-import android.text.TextUtils
 import android.util.Log
 
 class CallkitIncomingActivity : Activity() {
@@ -82,19 +77,13 @@ class CallkitIncomingActivity : Activity() {
     private var endedCallkitIncomingBroadcastReceiver = EndedCallkitIncomingBroadcastReceiver()
 
     private lateinit var ivBackground: ImageView
-    private lateinit var llBackgroundAnimation: RippleRelativeLayout
 
     private lateinit var tvNameCaller: TextView
     private lateinit var tvNumber: TextView
     private lateinit var ivLogo: ImageView
     private lateinit var ivAvatar: CircleImageView
 
-    private lateinit var llAction: LinearLayout
-    private lateinit var ivAcceptCall: ImageView
-    private lateinit var tvAccept: TextView
-
-    private lateinit var ivDeclineCall: ImageView
-    private lateinit var tvDecline: TextView
+    private lateinit var callSwipe: CallSwipeView
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -194,7 +183,7 @@ class CallkitIncomingActivity : Activity() {
         val isShowCallID = data?.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_SHOW_CALL_ID, false)
         tvNameCaller.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_NAME_CALLER, "")
         tvNumber.text = data?.getString(CallkitConstants.EXTRA_CALLKIT_HANDLE, "")
-        tvNumber.visibility = if (isShowCallID == true) View.VISIBLE else View.INVISIBLE
+        tvNumber.visibility = if (isShowCallID == true) View.VISIBLE else View.GONE
 
         try {
             tvNameCaller.setTextColor(Color.parseColor(textColor))
@@ -203,7 +192,7 @@ class CallkitIncomingActivity : Activity() {
         }
 
         val isShowLogo = data?.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_SHOW_LOGO, false)
-        ivLogo.visibility = if (isShowLogo == true) View.VISIBLE else View.INVISIBLE
+        ivLogo.visibility = if (isShowLogo == true) View.VISIBLE else View.GONE
         var logoUrl = data?.getString(CallkitConstants.EXTRA_CALLKIT_LOGO_URL, "")
         if (!logoUrl.isNullOrEmpty()) {
             if (!logoUrl.startsWith("http://", true) && !logoUrl.startsWith("https://", true)) {
@@ -222,50 +211,46 @@ class CallkitIncomingActivity : Activity() {
             }
             val headers =
                 data?.getSerializable(CallkitConstants.EXTRA_CALLKIT_HEADERS) as HashMap<String, Any?>
-            ImageLoaderProvider.loadImage(this@CallkitIncomingActivity, avatarUrl, headers, R.drawable.ic_default_avatar, ivAvatar)
+            ImageLoaderProvider.loadImage(this@CallkitIncomingActivity, avatarUrl, headers, R.drawable.ic_incoming_avatar, ivAvatar)
         }
 
         val callType = data?.getInt(CallkitConstants.EXTRA_CALLKIT_TYPE, 0) ?: 0
-        if (callType > 0) {
-            ivAcceptCall.setImageResource(R.drawable.ic_video)
-        }
+        callSwipe.setCallType(isVideo = callType > 0)
         val duration = data?.getLong(CallkitConstants.EXTRA_CALLKIT_DURATION, 0L) ?: 0L
         wakeLockRequest(duration)
 
         finishTimeout(data, duration)
 
         val textAccept = data?.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_ACCEPT, "")
-        tvAccept.text =
-            if (TextUtils.isEmpty(textAccept)) getString(R.string.text_accept) else textAccept
         val textDecline = data?.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, "")
-        tvDecline.text =
-            if (TextUtils.isEmpty(textDecline)) getString(R.string.text_decline) else textDecline
+        callSwipe.setActionLabels(
+            accept = if (textAccept.isNullOrEmpty()) getString(R.string.text_accept) else textAccept,
+            decline = if (textDecline.isNullOrEmpty()) getString(R.string.text_decline) else textDecline,
+        )
 
         val acceptCallColor =
             data?.getString(CallkitConstants.EXTRA_CALLKIT_ACCEPT_COLOR, "#0AA85B")
         try {
-            ivAcceptCall.setBackground(AppUtils.createCircleDrawable(Color.parseColor(acceptCallColor)))
+            callSwipe.setAcceptColor(Color.parseColor(acceptCallColor))
         } catch (error: Exception) {
+            Log.w("CallkitIncomingActivity", "Invalid accept color", error)
         }
 
         val declineCallColor =
             data?.getString(CallkitConstants.EXTRA_CALLKIT_DECLINE_COLOR, "#E12024")
         try {
-            ivDeclineCall.setBackground(AppUtils.createCircleDrawable(Color.parseColor(declineCallColor)))
+            callSwipe.setDeclineColor(Color.parseColor(declineCallColor))
         } catch (error: Exception) {
-        }
-
-        try {
-            tvAccept.setTextColor(Color.parseColor(textColor))
-            tvDecline.setTextColor(Color.parseColor(textColor))
-        } catch (error: Exception) {
+            Log.w("CallkitIncomingActivity", "Invalid decline color", error)
         }
 
         val backgroundColor =
             data?.getString(CallkitConstants.EXTRA_CALLKIT_BACKGROUND_COLOR, "#0AA85B")
         try {
             ivBackground.setBackgroundColor(Color.parseColor(backgroundColor))
+            callSwipe.setThumbColor(Color.parseColor(backgroundColor))
         } catch (error: Exception) {
+            Log.w("CallkitIncomingActivity", "Invalid background color", error)
         }
         var backgroundUrl = data?.getString(CallkitConstants.EXTRA_CALLKIT_BACKGROUND_URL, "")
         if (!backgroundUrl.isNullOrEmpty()) {
@@ -299,98 +284,27 @@ class CallkitIncomingActivity : Activity() {
 
     private fun initView() {
         ivBackground = findViewById(R.id.ivBackground)
-        llBackgroundAnimation = findViewById(R.id.llBackgroundAnimation)
-        // Duluin: the custom layout sizes this region itself (the design has no
-        // pulsing ripple), so the plugin's forced square height is dropped and the
-        // ripple is left transparent in the layout.
-        llBackgroundAnimation.startRippleAnimation()
-
         tvNameCaller = findViewById(R.id.tvNameCaller)
         tvNumber = findViewById(R.id.tvNumber)
         ivLogo = findViewById(R.id.ivLogo)
         ivAvatar = findViewById(R.id.ivAvatar)
+        callSwipe = findViewById(R.id.callSwipe)
+        callSwipe.onAccept = ::onAcceptClick
+        callSwipe.onDecline = ::onDeclineClick
 
-        llAction = findViewById(R.id.llAction)
-        // Duluin: the custom layout handles its own bottom spacing (the pill sits
-        // in a column with the swipe hint), so the plugin's nav-bar bottom margin
-        // is dropped — it used to shove the hint into the gesture area.
-
-        ivAcceptCall = findViewById(R.id.ivAcceptCall)
-        tvAccept = findViewById(R.id.tvAccept)
-        ivDeclineCall = findViewById(R.id.ivDeclineCall)
-        tvDecline = findViewById(R.id.tvDecline)
-        animateAcceptCall()
-
-        ivAcceptCall.setOnClickListener {
-            onAcceptClick()
+        val content = findViewById<View>(R.id.incomingCallContent)
+        val left = content.paddingLeft
+        val top = content.paddingTop
+        val right = content.paddingRight
+        val bottom = content.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(content) { view, insets ->
+            val bars = insets.getInsets(
+                WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout(),
+            )
+            view.setPadding(left + bars.left, top + bars.top, right + bars.right, bottom + bars.bottom)
+            insets
         }
-        ivDeclineCall.setOnClickListener {
-            onDeclineClick()
-        }
-
-        setupSwipeToAnswer()
-    }
-
-    // Duluin: drag the centre thumb right to answer, left to decline — the
-    // "geser untuk mengangkat" gesture from the Figma design. Tapping the FABs
-    // still works (their click listeners above); this only adds the swipe.
-    @Suppress("ClickableViewAccessibility")
-    private fun setupSwipeToAnswer() {
-        val thumb = findViewById<View>(R.id.vSwipeThumb) ?: return
-        var downX = 0f
-        var maxTravel = 1f
-        var fired = false
-        thumb.setOnTouchListener { _, event ->
-            when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> {
-                    downX = event.rawX
-                    maxTravel = ((llAction.width / 2f) - thumb.width).coerceAtLeast(1f)
-                    fired = false
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val dx = (event.rawX - downX).coerceIn(-maxTravel, maxTravel)
-                    thumb.translationX = dx
-                    val progress = dx / maxTravel
-                    ivAcceptCall.scaleX = 1f + progress.coerceAtLeast(0f) * 0.18f
-                    ivAcceptCall.scaleY = ivAcceptCall.scaleX
-                    ivDeclineCall.scaleX = 1f + (-progress).coerceAtLeast(0f) * 0.18f
-                    ivDeclineCall.scaleY = ivDeclineCall.scaleX
-                    true
-                }
-                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                    val dx = thumb.translationX
-                    val threshold = maxTravel * 0.6f
-                    resetButtonScale()
-                    when {
-                        !fired && dx >= threshold -> {
-                            fired = true
-                            onAcceptClick()
-                        }
-                        !fired && dx <= -threshold -> {
-                            fired = true
-                            onDeclineClick()
-                        }
-                        else -> thumb.animate().translationX(0f).setDuration(160L).start()
-                    }
-                    true
-                }
-                else -> false
-            }
-        }
-    }
-
-    private fun resetButtonScale() {
-        ivAcceptCall.scaleX = 1f
-        ivAcceptCall.scaleY = 1f
-        ivDeclineCall.scaleX = 1f
-        ivDeclineCall.scaleY = 1f
-    }
-
-    private fun animateAcceptCall() {
-        val shakeAnimation =
-            AnimationUtils.loadAnimation(this@CallkitIncomingActivity, R.anim.shake_anim)
-        ivAcceptCall.animation = shakeAnimation
+        ViewCompat.requestApplyInsets(content)
     }
 
 

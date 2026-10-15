@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="incoming_avatar_outer_size">212dp</dimen>
+    <dimen name="incoming_avatar_middle_size">184dp</dimen>
+    <dimen name="incoming_avatar_size">156dp</dimen>
+</resources>

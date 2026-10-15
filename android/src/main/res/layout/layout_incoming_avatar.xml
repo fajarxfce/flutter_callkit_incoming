@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/incoming_avatar_outer_size"
+    android:layout_height="@dimen/incoming_avatar_outer_size"
+    android:background="@drawable/bg_incoming_avatar_halo"
+    android:importantForAccessibility="noHideDescendants">
+
+    <FrameLayout
+        android:layout_width="@dimen/incoming_avatar_middle_size"
+        android:layout_height="@dimen/incoming_avatar_middle_size"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_incoming_avatar_halo">
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivAvatar"
+            android:layout_width="@dimen/incoming_avatar_size"
+            android:layout_height="@dimen/incoming_avatar_size"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_incoming_avatar" />
+    </FrameLayout>
+</FrameLayout>

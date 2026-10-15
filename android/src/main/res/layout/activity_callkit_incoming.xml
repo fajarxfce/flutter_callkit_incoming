@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Duluin Chat incoming call — a native rebuild of the Figma design
-     "detail riwayat panggilan" (node 118:1391): brand-green gradient + pattern,
-     caller name over a 150dp avatar, and a glass pill carrying the decline FAB,
-     a decorative swipe thumb, and the accept FAB, with a swipe hint underneath.
-     The plugin wires these ids: ivBackground, llBackgroundAnimation, tvNameCaller,
-     tvNumber, ivLogo, ivAvatar, llAction, ivAcceptCall, tvAccept, ivDeclineCall,
-     tvDecline — all kept. -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<!-- Native incoming call, Figma 118:1837. Host apps can override the backdrop. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -16,218 +8,43 @@
         android:id="@+id/ivBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#0AA85B"
-        android:src="@drawable/bg_incoming_call"
+        android:importantForAccessibility="no"
         android:scaleType="fitXY"
-        tools:ignore="ContentDescription" />
+        android:src="@drawable/bg_incoming_call" />
 
     <LinearLayout
+        android:id="@+id/incomingCallContent"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingStart="18dp"
-        android:paddingEnd="18dp"
-        android:paddingTop="56dp"
-        android:paddingBottom="44dp">
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
 
-        <com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout
-            android:id="@+id/llBackgroundAnimation"
-            android:layout_width="match_parent"
+        <Space
+            android:layout_width="1dp"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            app:ripple_color="#00FFFFFF"
-            app:ripple_amount="1"
-            app:ripple_scale="1.0">
+            android:layout_weight="1.5" />
 
-            <LinearLayout
-                android:id="@+id/llCallerInfo"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:layout_centerHorizontal="true"
-                android:layout_marginTop="8dp"
-                android:gravity="center"
-                android:orientation="vertical">
+        <include layout="@layout/layout_incoming_caller" />
 
-                <TextView
-                    android:id="@+id/tvNameCaller"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:ellipsize="end"
-                    android:fontFamily="@font/inter_bold"
-                    android:maxLines="1"
-                    android:textColor="#FFFFFF"
-                    android:textSize="24sp"
-                    tools:text="Wisnu Bernardo" />
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="3" />
 
-                <TextView
-                    android:id="@+id/tvSubtitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="@font/inter_regular"
-                    android:text="@string/text_incoming_call"
-                    android:textColor="#E8E8E8"
-                    android:textSize="14sp" />
+        <include layout="@layout/layout_incoming_avatar" />
 
-                <TextView
-                    android:id="@+id/tvNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:maxLines="1"
-                    android:textColor="#E8E8E8"
-                    android:textSize="14sp"
-                    android:visibility="gone"
-                    tools:ignore="MissingPrefix" />
+        <Space
+            android:layout_width="1dp"
+            android:layout_height="0dp"
+            android:layout_weight="3" />
 
-            </LinearLayout>
-
-            <ImageView
-                android:id="@+id/ivLogo"
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:layout_centerHorizontal="true"
-                android:layout_alignParentTop="true"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:src="@drawable/transparent"
-                android:visibility="gone"
-                tools:ignore="ContentDescription" />
-
-            <de.hdodenhof.circleimageview.CircleImageView
-                android:id="@+id/ivAvatar"
-                android:layout_width="150dp"
-                android:layout_height="150dp"
-                android:layout_centerInParent="true"
-                android:src="@drawable/ic_default_avatar"
-                app:civ_border_color="#40FFFFFF"
-                app:civ_border_width="1dp" />
-
-        </com.hiennv.flutter_callkit_incoming.widgets.RippleRelativeLayout>
-
-        <LinearLayout
+        <com.hiennv.flutter_callkit_incoming.widgets.CallSwipeView
+            android:id="@+id/callSwipe"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <LinearLayout
-                android:id="@+id/llAction"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_incoming_pill"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp">
-
-                <!-- Decline: red FAB in a soft red halo. -->
-                <FrameLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_halo_decline"
-                    android:padding="7dp">
-
-                    <ImageView
-                        android:id="@+id/ivDeclineCall"
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:background="@drawable/bg_button_decline"
-                        android:padding="12dp"
-                        android:src="@drawable/ic_call_decline"
-                        tools:ignore="ContentDescription" />
-
-                    <TextView
-                        android:id="@+id/tvDecline"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone" />
-
-                </FrameLayout>
-
-                <!-- Decorative swipe thumb, flanked by chevrons. -->
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:orientation="horizontal">
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_marginEnd="12dp"
-                        android:alpha="0.7"
-                        android:rotation="270"
-                        android:src="@drawable/ic_chevrons"
-                        tools:ignore="ContentDescription" />
-
-                    <FrameLayout
-                        android:id="@+id/vSwipeThumb"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:background="@drawable/bg_thumb">
-
-                        <View
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:layout_gravity="center"
-                            android:background="@drawable/bg_thumb_dot" />
-
-                    </FrameLayout>
-
-                    <ImageView
-                        android:layout_width="18dp"
-                        android:layout_height="18dp"
-                        android:layout_marginStart="12dp"
-                        android:alpha="0.7"
-                        android:rotation="90"
-                        android:src="@drawable/ic_chevrons"
-                        tools:ignore="ContentDescription" />
-
-                </LinearLayout>
-
-                <!-- Accept: green FAB in a soft green halo. -->
-                <FrameLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_halo_accept"
-                    android:padding="7dp">
-
-                    <ImageView
-                        android:id="@+id/ivAcceptCall"
-                        android:layout_width="46dp"
-                        android:layout_height="46dp"
-                        android:background="@drawable/bg_button_accept"
-                        android:padding="12dp"
-                        android:src="@drawable/ic_call_accept"
-                        tools:ignore="ContentDescription" />
-
-                    <TextView
-                        android:id="@+id/tvAccept"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone" />
-
-                </FrameLayout>
-
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/tvSwipeHint"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:fontFamily="@font/inter_regular"
-                android:text="@string/text_swipe_to_answer"
-                android:textAlignment="center"
-                android:textColor="#99FFFFFF"
-                android:textSize="14sp" />
-
-        </LinearLayout>
-
+            android:layout_height="wrap_content" />
     </LinearLayout>
-
-</RelativeLayout>
+</FrameLayout>
