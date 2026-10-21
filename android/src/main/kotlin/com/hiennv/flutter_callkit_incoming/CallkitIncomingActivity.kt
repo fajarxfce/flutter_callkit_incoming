@@ -26,6 +26,7 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import com.hiennv.flutter_callkit_incoming.widgets.CallSwipeView
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import de.hdodenhof.circleimageview.CircleImageView
@@ -49,22 +50,31 @@ class CallkitIncomingActivity : Activity() {
                 `package` = context.packageName
             }
 
-        fun getIntentEnded(context: Context, isAccepted: Boolean): Intent {
+        fun getIntentEnded(context: Context, data: Bundle, isAccepted: Boolean): Intent {
             val intent = Intent("${context.packageName}.${ACTION_ENDED_CALL_INCOMING}")
             intent.putExtra("ACCEPTED", isAccepted)
-            intent.setPackage(context.packageName)
-            intent.setClassName(
-                context.packageName,
-                "com.hiennv.flutter_callkit_incoming.CallkitIncomingActivity"
+            intent.putExtra(
+                CallkitConstants.EXTRA_CALLKIT_ID,
+                data.getString(CallkitConstants.EXTRA_CALLKIT_ID),
             )
+            // This is delivered to the activity's registered receiver, not an
+            // activity component. Keep delivery inside the host application.
+            intent.setPackage(context.packageName)
             return intent
         }
     }
 
     inner class EndedCallkitIncomingBroadcastReceiver : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
+            val callId = intent.getStringExtra(CallkitConstants.EXTRA_CALLKIT_ID)
+            val incomingId = this@CallkitIncomingActivity.intent
+                .getBundleExtra(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
+                ?.getString(CallkitConstants.EXTRA_CALLKIT_ID)
+            if (callId.isNullOrEmpty() || callId != incomingId) return
+
             if (!isFinishing) {
                 val isAccepted = intent.getBooleanExtra("ACCEPTED", false)
+                Log.d("CallkitIncomingActivity", "Closing incoming screen id=$callId accepted=$isAccepted")
                 if (isAccepted) {
                     finishDelayed()
                 } else {
@@ -106,18 +116,12 @@ class CallkitIncomingActivity : Activity() {
         setContentView(R.layout.activity_callkit_incoming)
         initView()
         incomingData(intent)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(
-                endedCallkitIncomingBroadcastReceiver,
-                IntentFilter("${packageName}.${ACTION_ENDED_CALL_INCOMING}"),
-                Context.RECEIVER_EXPORTED,
-            )
-        } else {
-            registerReceiver(
-                endedCallkitIncomingBroadcastReceiver,
-                IntentFilter("${packageName}.${ACTION_ENDED_CALL_INCOMING}")
-            )
-        }
+        ContextCompat.registerReceiver(
+            this,
+            endedCallkitIncomingBroadcastReceiver,
+            IntentFilter("${packageName}.${ACTION_ENDED_CALL_INCOMING}"),
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
         FlutterCallkitIncomingPlugin.getInstance()?.getCallkitSoundPlayerManager()?.keepRingingOnFullScreen();
     }
 

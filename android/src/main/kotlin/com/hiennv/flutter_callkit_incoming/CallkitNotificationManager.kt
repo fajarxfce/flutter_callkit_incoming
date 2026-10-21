@@ -853,7 +853,7 @@ class CallkitNotificationManager(
 
         callkitSoundPlayerManager?.stop()
 
-        context.sendBroadcast(CallkitIncomingActivity.getIntentEnded(context, isAccepted))
+        context.sendBroadcast(CallkitIncomingActivity.getIntentEnded(context, data, isAccepted))
         val notificationId =
             data.getString(CallkitConstants.EXTRA_CALLKIT_ID, "callkit_incoming").hashCode()
         getNotificationManager().cancel(notificationId)
