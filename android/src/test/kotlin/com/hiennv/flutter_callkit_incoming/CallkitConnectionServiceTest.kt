@@ -1,8 +1,11 @@
 package com.hiennv.flutter_callkit_incoming
 
+import android.Manifest
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.telecom.ConnectionRequest
+import android.telecom.TelecomManager
 import android.telecom.VideoProfile
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -10,6 +13,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
@@ -40,6 +45,23 @@ class CallkitConnectionServiceTest {
             val outgoing = controller.get().onCreateOutgoingConnection(null, request)
             assertEquals(expected, outgoing.videoState)
             outgoing.destroy()
+        }
+    }
+
+    @Test
+    fun telecomReceivesVideoTypeBeforeCreatingTheConnection() {
+        val context = RuntimeEnvironment.getApplication()
+        shadowOf(context).grantPermissions(Manifest.permission.MANAGE_OWN_CALLS)
+        val telecom = shadowOf(context.getSystemService(Context.TELECOM_SERVICE) as TelecomManager)
+        telecom.setCallPhonePermission(true)
+        val receiver = CallkitIncomingBroadcastReceiver()
+        for (type in listOf(0, 1)) {
+            val data = Data(mapOf("id" to "register-$type", "type" to type)).toBundle()
+            val expected = if (type == 1) VideoProfile.STATE_BIDIRECTIONAL else VideoProfile.STATE_AUDIO_ONLY
+            receiver.onReceive(context, CallkitIncomingBroadcastReceiver.getIntentIncoming(context, data))
+            assertEquals(expected, telecom.lastIncomingCall.extras.getInt(TelecomManager.EXTRA_INCOMING_VIDEO_STATE, -1))
+            receiver.onReceive(context, CallkitIncomingBroadcastReceiver.getIntentStart(context, data))
+            assertEquals(expected, telecom.lastOutgoingCall.extras.getInt(TelecomManager.EXTRA_START_CALL_WITH_VIDEO_STATE, -1))
         }
     }
 }

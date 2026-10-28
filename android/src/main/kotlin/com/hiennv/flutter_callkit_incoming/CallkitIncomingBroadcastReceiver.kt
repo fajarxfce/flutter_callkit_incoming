@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.telecom.TelecomManager
+import android.telecom.VideoProfile
 import android.util.Log
 import androidx.core.content.ContextCompat
 
@@ -139,7 +140,7 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
             putBundle(CallkitConnection.EXTRA_CALL_BUNDLE, data)
             putInt(
                 TelecomManager.EXTRA_INCOMING_VIDEO_STATE,
-                android.telecom.VideoProfile.STATE_AUDIO_ONLY,
+                if (parsed.type == 1) VideoProfile.STATE_BIDIRECTIONAL else VideoProfile.STATE_AUDIO_ONLY,
             )
         }
         try {
@@ -188,6 +189,10 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
         val extras = Bundle().apply {
             putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle)
             putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, outgoingExtras)
+            putInt(
+                TelecomManager.EXTRA_START_CALL_WITH_VIDEO_STATE,
+                if (parsed.type == 1) VideoProfile.STATE_BIDIRECTIONAL else VideoProfile.STATE_AUDIO_ONLY,
+            )
         }
         val address = parsed.handle.ifEmpty { parsed.id }
         try {
