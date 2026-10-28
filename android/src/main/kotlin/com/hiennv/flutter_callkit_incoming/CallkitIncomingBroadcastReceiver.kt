@@ -6,6 +6,8 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.AudioDeviceInfo
+import android.media.AudioManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -186,6 +188,19 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
         val outgoingExtras = Bundle().apply {
             putBundle(CallkitConnection.EXTRA_CALL_BUNDLE, data)
         }
+        val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        val hasHeadset = audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).any {
+            when (it.type) {
+                AudioDeviceInfo.TYPE_BLUETOOTH_SCO,
+                AudioDeviceInfo.TYPE_BLUETOOTH_A2DP,
+                AudioDeviceInfo.TYPE_BLE_HEADSET,
+                AudioDeviceInfo.TYPE_HEARING_AID,
+                AudioDeviceInfo.TYPE_WIRED_HEADSET,
+                AudioDeviceInfo.TYPE_WIRED_HEADPHONES,
+                AudioDeviceInfo.TYPE_USB_HEADSET -> true
+                else -> false
+            }
+        }
         val extras = Bundle().apply {
             putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, handle)
             putBundle(TelecomManager.EXTRA_OUTGOING_CALL_EXTRAS, outgoingExtras)
@@ -193,6 +208,9 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                 TelecomManager.EXTRA_START_CALL_WITH_VIDEO_STATE,
                 if (parsed.type == 1) VideoProfile.STATE_BIDIRECTIONAL else VideoProfile.STATE_AUDIO_ONLY,
             )
+            // Telecom takes initial audio focus before it receives the video
+            // Connection. Select its starting route without overriding a headset.
+            putBoolean(TelecomManager.EXTRA_START_CALL_WITH_SPEAKERPHONE, parsed.type == 1 && !hasHeadset)
         }
         val address = parsed.handle.ifEmpty { parsed.id }
         try {
