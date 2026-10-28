@@ -24,6 +24,30 @@ class CallAudioRouteTest {
     }
 
     @Test
+    fun voiceOnSpeakerOnlyDeviceKeepsTheAvailableOutput() {
+        assertEquals(
+            CallAudioRoute.SPEAKER,
+            selectCallAudioRoute(setOf(CallAudioRoute.SPEAKER), CallAudioRoute.SPEAKER, speaker = false, force = false),
+        )
+    }
+
+    @Test
+    fun speakerOffWithoutAnAlternativeReportsTheActualSpeakerRoute() {
+        assertEquals(
+            CallAudioRoute.SPEAKER,
+            selectCallAudioRoute(setOf(CallAudioRoute.SPEAKER), CallAudioRoute.SPEAKER, speaker = false, force = true),
+        )
+    }
+
+    @Test
+    fun speakerOnlyDeviceCanInitializeBeforeTheCurrentRouteArrives() {
+        assertEquals(
+            CallAudioRoute.SPEAKER,
+            selectCallAudioRoute(setOf(CallAudioRoute.SPEAKER), null, speaker = false, force = false),
+        )
+    }
+
+    @Test
     fun automaticVideoPreservesBluetooth() {
         assertEquals(
             CallAudioRoute.BLUETOOTH,

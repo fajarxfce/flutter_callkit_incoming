@@ -15,4 +15,6 @@ internal fun selectCallAudioRoute(
     headsets.firstOrNull { it in available }?.let { return it }
     val target = if (speaker) CallAudioRoute.SPEAKER else CallAudioRoute.EARPIECE
     return target.takeIf { it in available }
+        ?: current?.takeIf { it in available }
+        ?: CallAudioRoute.SPEAKER.takeIf { it in available }
 }

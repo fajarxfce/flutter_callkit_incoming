@@ -9,6 +9,7 @@ import android.telecom.ConnectionService
 import android.telecom.DisconnectCause
 import android.telecom.PhoneAccountHandle
 import android.telecom.TelecomManager
+import android.telecom.VideoProfile
 import android.util.Log
 import androidx.annotation.RequiresApi
 
@@ -59,6 +60,7 @@ class CallkitConnectionService : ConnectionService() {
         Log.d(TAG, "onCreateIncomingConnection id=$callId caller=${data.nameCaller}")
 
         val connection = CallkitConnection(applicationContext, callId, callBundle).apply {
+            setVideoState(if (data.type == 1) VideoProfile.STATE_BIDIRECTIONAL else VideoProfile.STATE_AUDIO_ONLY)
             if (data.nameCaller.isNotEmpty()) {
                 setCallerDisplayName(data.nameCaller, TelecomManager.PRESENTATION_ALLOWED)
             }
@@ -99,6 +101,7 @@ class CallkitConnectionService : ConnectionService() {
         Log.d(TAG, "onCreateOutgoingConnection id=$callId callee=${data.nameCaller}")
 
         val connection = CallkitConnection(applicationContext, callId, callBundle).apply {
+            setVideoState(if (data.type == 1) VideoProfile.STATE_BIDIRECTIONAL else VideoProfile.STATE_AUDIO_ONLY)
             if (data.nameCaller.isNotEmpty()) {
                 setCallerDisplayName(data.nameCaller, TelecomManager.PRESENTATION_ALLOWED)
             }
