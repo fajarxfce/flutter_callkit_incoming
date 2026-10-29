@@ -2,6 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <string name="text_accept">Accept</string>
+    <string name="text_tap_to_answer">Ketuk untuk menjawab</string>
     <string name="text_decline">Decline</string>
     <string name="text_incoming_call">Panggilan masuk</string>
     <string name="text_swipe_to_answer">Geser kanan untuk menjawab, kiri untuk menolak</string>

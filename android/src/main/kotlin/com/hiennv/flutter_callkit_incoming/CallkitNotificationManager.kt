@@ -10,6 +10,7 @@ package com.hiennv.flutter_callkit_incoming
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -183,6 +184,8 @@ class CallkitNotificationManager(
     @SuppressLint("MissingPermission")
     fun getIncomingNotification(data: Bundle): CallkitNotification? {
         data.putLong(EXTRA_TIME_START_CALL, System.currentTimeMillis())
+        val keyguard = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
+        val isLocked = keyguard.isKeyguardLocked
 
         val notificationId =
             data.getString(CallkitConstants.EXTRA_CALLKIT_ID, "callkit_incoming").hashCode()
@@ -209,7 +212,12 @@ class CallkitNotificationManager(
         notificationBuilder?.setFullScreenIntent(
             getActivityPendingIntent(notificationId, data), true
         )
-        notificationBuilder?.setContentIntent(getActivityPendingIntent(notificationId, data))
+        // SystemUI always unlocks for Activity action buttons. A notification
+        // content tap supports showWhenLocked and closes the shade itself.
+        notificationBuilder?.setContentIntent(
+            if (isLocked) getAcceptPendingIntent(notificationId, data)
+            else getActivityPendingIntent(notificationId, data)
+        )
         notificationBuilder?.setDeleteIntent(getTimeOutPendingIntent(notificationId, data))
         val typeCall = data.getInt(CallkitConstants.EXTRA_CALLKIT_TYPE, -1)
         var smallIcon = context.applicationInfo.icon
@@ -232,7 +240,7 @@ class CallkitNotificationManager(
             data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_CUSTOM_NOTIFICATION, false)
         val isCustomSmallExNotification =
             data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_CUSTOM_SMALL_EX_NOTIFICATION, false)
-        if (isCustomNotification) {
+        if (isCustomNotification && !isLocked) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
 
                 val caller = data.getString(CallkitConstants.EXTRA_CALLKIT_NAME_CALLER, "")
@@ -329,7 +337,16 @@ class CallkitNotificationManager(
                 )
             }
             val caller = data.getString(CallkitConstants.EXTRA_CALLKIT_NAME_CALLER, "")
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            if (isLocked) {
+                notificationBuilder?.setContentTitle(caller)
+                notificationBuilder?.setContentText(context.getString(R.string.text_tap_to_answer))
+                val decline = data.getString(CallkitConstants.EXTRA_CALLKIT_TEXT_DECLINE, "")
+                notificationBuilder?.addAction(
+                    R.drawable.ic_decline,
+                    if (TextUtils.isEmpty(decline)) context.getString(R.string.text_decline) else decline,
+                    getDeclinePendingIntent(notificationId, data)
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 val person = Person.Builder().setName(caller).setImportant(
                     data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_IMPORTANT, true)
                 ).setBot(data.getBoolean(CallkitConstants.EXTRA_CALLKIT_IS_BOT, false)).build()
