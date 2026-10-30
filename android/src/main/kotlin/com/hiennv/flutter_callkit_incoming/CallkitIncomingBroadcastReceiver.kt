@@ -303,7 +303,13 @@ class CallkitIncomingBroadcastReceiver : BroadcastReceiver() {
                     FlutterCallkitIncomingPlugin.notifyEventCallbacks(CallkitEventCallback.CallEvent.END, data)
                     // clear notification and stop service
                     getCallkitNotificationManager()?.clearIncomingNotification(data, false)
-                    CallkitNotificationService.stopService(context)
+                    val callId = data.getString(CallkitConstants.EXTRA_CALLKIT_ID, "")
+                    val runtime = context.applicationContext as? CallkitRuntimeHost
+                    // The host releases the service after its media cleanup, so End
+                    // can still reach Dart after the last activity has been removed.
+                    if (runtime?.shouldDeferCallEnd(callId) != true) {
+                        CallkitNotificationService.stopService(context)
+                    }
                     sendEventFlutter(CallkitConstants.ACTION_CALL_ENDED, data)
                     removeCall(context, Data.fromBundle(data))
                 } catch (error: Exception) {

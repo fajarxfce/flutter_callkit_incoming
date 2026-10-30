@@ -841,7 +841,10 @@ class CallkitNotificationManager(
         notificationOngoingBuilder?.setSound(null)
         notificationOngoingBuilder?.setContentIntent(
             getAppPendingIntent(
-                onGoingNotificationId, data
+                onGoingNotificationId, data,
+                if (context.applicationContext is CallkitRuntimeHost) {
+                    "${context.packageName}.${CallkitConstants.ACTION_CALL_OPEN}"
+                } else null
             )
         )
         val actionColor = data.getString(CallkitConstants.EXTRA_CALLKIT_ACTION_COLOR, "#4CAF50")
@@ -1006,8 +1009,8 @@ class CallkitNotificationManager(
         return PendingIntent.getActivity(context, id, intent, getFlagPendingIntent())
     }
 
-    private fun getAppPendingIntent(id: Int, data: Bundle): PendingIntent {
-        val intent: Intent? = AppUtils.getAppIntent(context, data = data)
+    private fun getAppPendingIntent(id: Int, data: Bundle, action: String? = null): PendingIntent {
+        val intent: Intent? = AppUtils.getAppIntent(context, action = action, data = data)
         return PendingIntent.getActivity(context, id, intent, getFlagPendingIntent())
     }
 

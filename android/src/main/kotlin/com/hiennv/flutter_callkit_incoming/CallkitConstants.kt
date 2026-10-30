@@ -4,6 +4,7 @@ object CallkitConstants {
     const val ACTION_CALL_INCOMING =
         "com.hiennv.flutter_callkit_incoming.ACTION_CALL_INCOMING"
     const val ACTION_CALL_START = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_START"
+    const val ACTION_CALL_OPEN = "com.hiennv.flutter_callkit_incoming.ACTION_CALL_OPEN"
     const val ACTION_CALL_ACCEPT =
         "com.hiennv.flutter_callkit_incoming.ACTION_CALL_ACCEPT"
     const val ACTION_CALL_DECLINE =

@@ -18,6 +18,8 @@ import androidx.core.content.ContextCompat
 
 class CallkitNotificationService : Service() {
 
+    private var runtimeCallId: String? = null
+
     companion object {
 
         private const val TAG = "CallkitNotificationService"
@@ -76,6 +78,12 @@ class CallkitNotificationService : Service() {
         }
 
         try {
+            if (isForegroundAction) {
+                bundle?.getString(CallkitConstants.EXTRA_CALLKIT_ID)?.let { id ->
+                    runtimeCallId = id
+                    (application as? CallkitRuntimeHost)?.onCallServiceStarted(id)
+                }
+            }
             when (intent?.action) {
                 CallkitConstants.ACTION_CALL_START -> {
                     intent.getBundleExtra(CallkitConstants.EXTRA_CALLKIT_INCOMING_DATA)
@@ -237,6 +245,7 @@ class CallkitNotificationService : Service() {
 
 
     override fun onDestroy() {
+        (application as? CallkitRuntimeHost)?.onCallServiceStopped(runtimeCallId)
         super.onDestroy()
         // Don't destroy the notification manager here as it's shared across the app
         // The plugin will handle cleanup when all engines are detached
@@ -248,6 +257,7 @@ class CallkitNotificationService : Service() {
 
 
     override fun onTaskRemoved(rootIntent: Intent?) {
+        (application as? CallkitRuntimeHost)?.onCallTaskRemoved()
         super.onTaskRemoved(rootIntent)
         // Don't kill the FGS. The app might be closed by user but the call is still ongoing
     }
